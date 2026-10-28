@@ -1,0 +1,446 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pressupost 50/30/20 pas a pas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* Layout: una columna de passos numerats, sempre en el mateix ordre; cada categoria té color + icona + nom */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --soft:#eef2f7; --fg:#17202b; --muted:#4f5a68; --line:#d3d9e2;
+  --inc:#4b5694; --nec:#1f5fa8; --des:#d97a14; --est:#2e9461; --none:#b7bec8;
+  --ok:#25804f; --bad:#b8352b; --ok-bg:#e1f2e8; --bad-bg:#f9e1de; --help:#eaf1fb;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171e; --surface:#1b222c; --soft:#232c37; --fg:#e8edf3; --muted:#a9b3c0; --line:#33404f;
+  --inc:#a5addf; --nec:#5e9be0; --des:#f0a443; --est:#4cbc84; --none:#5b6573;
+  --ok:#5fd193; --bad:#f0857b; --ok-bg:#183326; --bad-bg:#3d1e1c; --help:#1c2a3b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171e; --surface:#1b222c; --soft:#232c37; --fg:#e8edf3; --muted:#a9b3c0; --line:#33404f;
+  --inc:#a5addf; --nec:#5e9be0; --des:#f0a443; --est:#4cbc84; --none:#5b6573;
+  --ok:#5fd193; --bad:#f0857b; --ok-bg:#183326; --bad-bg:#3d1e1c; --help:#1c2a3b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:18px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 56px}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,5vw,36px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-size:21px;margin:0;display:flex;align-items:center;gap:10px}
+h3{font-size:18px;margin:0;display:flex;align-items:center;gap:8px}
+p{margin:0;max-width:62ch}
+.icon{width:1.4em;height:1.4em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.num{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--fg);color:var(--bg);font-size:18px;font-weight:700}
+.step{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.todo{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:16px 20px}
+.todo ol{margin:8px 0 0;padding-left:24px;display:flex;flex-direction:column;gap:4px}
+.help{background:var(--help);border-radius:12px;padding:12px 16px;display:flex;gap:10px;align-items:flex-start}
+.help .icon{color:var(--nec);margin-top:2px}
+button{font:inherit;font-size:17px;cursor:pointer;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 14px;min-height:48px;display:inline-flex;align-items:center;gap:8px}
+button:hover{border-color:var(--muted)}
+:focus-visible{outline:3px solid var(--nec);outline-offset:2px}
+button.primary{background:var(--nec);border-color:var(--nec);color:#fff;font-weight:700}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:600px){.two{grid-template-columns:minmax(0,1fr)}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label,.qlabel{font-weight:700}
+input[type=text],input:not([type]),textarea,select{border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit;padding:10px 12px;min-width:0;width:100%;min-height:50px}
+textarea{resize:vertical;min-height:90px}
+/* llistes de diners */
+.box{border:2px solid var(--line);border-left:8px solid var(--gc);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.box h3 .icon{color:var(--gc)}
+.box .what{color:var(--muted)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 8em 48px;gap:8px;align-items:center}
+@media (max-width:440px){.row{grid-template-columns:minmax(0,1fr) 6.5em 48px}}
+.row input.name{background:var(--surface)}
+.money{display:flex;align-items:center;border:2px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;min-height:50px}
+.money input{border:0;background:transparent;color:var(--fg);font:inherit;width:100%;padding:8px;text-align:right;font-variant-numeric:tabular-nums;min-width:0;min-height:0}
+.money span{padding-right:10px;color:var(--muted)}
+.del{padding:0;border:0;background:none;color:var(--muted);justify-content:center;width:48px}
+.del:hover{color:var(--bad)}
+.add{align-self:flex-start;border-style:dashed}
+.total{display:flex;justify-content:space-between;gap:8px;font-weight:700;border-top:2px solid var(--line);padding-top:8px;font-variant-numeric:tabular-nums}
+.tag{font-size:14px;font-weight:700;background:var(--est);color:#fff;border-radius:999px;padding:1px 10px;justify-self:start}
+/* resultat */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{border:2px solid var(--line);border-top:8px solid var(--gc);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.card .t{font-weight:700;display:flex;align-items:center;gap:8px}
+.card .t .icon{color:var(--gc)}
+.card .pct{font-family:var(--display);font-weight:700;font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.card .rule{color:var(--muted)}
+.pill{align-self:flex-start;font-weight:700;border-radius:999px;padding:3px 12px;display:inline-flex;align-items:center;gap:6px}
+.pill .icon{width:1.1em;height:1.1em}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.bad{background:var(--bad-bg);color:var(--bad)}
+.bars{display:flex;flex-direction:column;gap:10px}
+.barrow{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:10px;align-items:center}
+@media (max-width:500px){.barrow{grid-template-columns:minmax(0,1fr)}}
+.stack{display:flex;height:44px;border-radius:10px;overflow:hidden;background:var(--line);gap:2px}
+.seg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;min-width:0}
+.seg.dark{color:#1d1405}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:16px}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:16px;height:16px;border-radius:4px;display:inline-block;flex:none}
+.balance{border-radius:12px;padding:14px 16px;font-weight:700;display:flex;gap:10px;align-items:flex-start}
+.balance.ok{background:var(--ok-bg);color:var(--ok)} .balance.bad{background:var(--bad-bg);color:var(--bad)} .balance.mid{background:var(--soft);color:var(--fg)}
+/* preguntes */
+.q{display:flex;flex-direction:column;gap:10px;border-top:2px solid var(--line);padding-top:16px}
+.q:first-of-type{border-top:0;padding-top:0}
+.choices{display:flex;flex-wrap:wrap;gap:10px}
+.choice{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:10px;padding:8px 14px;min-height:50px;cursor:pointer;background:var(--bg)}
+.choice input{width:22px;height:22px;accent-color:var(--nec);margin:0}
+.choice:has(input:checked){border-color:var(--nec);background:var(--help)}
+.starter{color:var(--muted);font-size:16px}
+.result-line{background:var(--soft);border-radius:10px;padding:12px 16px;font-weight:700}
+.msg{font-weight:700}
+.msg.bad{color:var(--bad)} .msg.ok{color:var(--ok)}
+table.cmp{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.cmp th,.cmp td{padding:10px;border-bottom:2px solid var(--line);text-align:left}
+.cmp th{color:var(--muted);font-size:16px}
+.cmp td .pill{font-size:15px}
+.cmp-wrap{overflow-x:auto}
+.note{color:var(--muted);font-size:16px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16" cy="14.5" r="1.2"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></symbol>
+  <symbol id="i-jar" viewBox="0 0 24 24"><path d="M8 3h8M9 3v3c-2.5 1-4 3-4 6v6a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-6c0-3-1.5-5-4-6V3"/><path d="M12 11v6M10 13h3a1.5 1.5 0 0 1 0 3h-3"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></symbol>
+  <symbol id="i-bad" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.1"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Pressupost 50/30/20 pas a pas</h1>
+    <p>Fes els passos en ordre, de l'1 al 6.</p>
+  </header>
+
+  <div class="todo">
+    <b>Què has de fer:</b>
+    <ol>
+      <li>Posar cada despesa al seu lloc: necessitat, desig o estalvi.</li>
+      <li>Mirar si es compleix la regla 50/30/20.</li>
+      <li>Dir quin és el problema.</li>
+      <li>Proposar un canvi i comprovar si funciona.</li>
+    </ol>
+  </div>
+
+  <section class="step">
+    <h2><span class="num">1</span>Els noms</h2>
+    <div class="two">
+      <div class="field"><label for="alumne">El teu nom</label><input id="alumne" autocomplete="off"></div>
+      <div class="field"><label for="persona">De qui és el pressupost?</label><input id="persona" placeholder="Per exemple: Laia" autocomplete="off"></div>
+    </div>
+    <div class="help" id="exNote" hidden><svg class="icon"><use href="#i-info"/></svg><div>Ara veus un <b>exemple</b>. Per fer el teu cas, prem <b>Comença de zero</b>.</div></div>
+    <div class="actions">
+      <button type="button" class="primary" id="p-zero">Comença de zero</button>
+      <button type="button" id="p-ex">Mira un exemple</button>
+    </div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">2</span>Els diners que entren</h2>
+    <div id="incBox"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">3</span>Els diners que surten</h2>
+    <div class="help"><svg class="icon"><use href="#i-info"/></svg><div>Pregunta't: <b>Puc viure sense això?</b><br>No → és una <b>necessitat</b>. Sí → és un <b>desig</b>.<br>Els diners que guardes són <b>estalvi</b>.</div></div>
+    <div id="outBox" style="display:flex;flex-direction:column;gap:14px"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">4</span>El resultat</h2>
+    <div class="cards" id="cards"></div>
+    <div class="bars">
+      <div class="barrow"><b>Com es reparteix</b><div class="stack" id="stackReal"></div></div>
+      <div class="barrow"><b>Com hauria de ser</b><div class="stack" id="stackIdeal"></div></div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--nec)"></i>Necessitats</span>
+      <span><i class="dot" style="background:var(--des)"></i>Desitjos</span>
+      <span><i class="dot" style="background:var(--est)"></i>Estalvi</span>
+      <span><i class="dot" style="background:var(--none)"></i>Sobren</span>
+    </div>
+    <div class="balance" id="balance"></div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">5</span>Quin és el problema?</h2>
+    <div class="q">
+      <span class="qlabel">a) Quina part no compleix la regla? Pots marcar-ne més d'una.</span>
+      <div class="choices" id="q1"></div>
+    </div>
+    <div class="q">
+      <label class="qlabel" for="q1t">b) Explica-ho amb els percentatges.</label>
+      <span class="starter">Completa: «Els desitjos són el … %. Haurien de ser com a màxim el 30 %.»</span>
+      <textarea id="q1t"></textarea>
+    </div>
+  </section>
+
+  <section class="step">
+    <h2><span class="num">6</span>El teu canvi</h2>
+    <div class="q">
+      <label class="qlabel" for="chItem">a) Quina despesa vols canviar?</label>
+      <select id="chItem"></select>
+    </div>
+    <div class="q">
+      <span class="qlabel">b) Què fas amb aquesta despesa?</span>
+      <div class="choices" id="chHow"></div>
+    </div>
+    <div class="q">
+      <label class="qlabel" for="chAmount">c) Quants euros estalvies cada mes?</label>
+      <div class="money" style="max-width:12em"><input id="chAmount" type="number" min="0" step="1" inputmode="decimal"><span>€</span></div>
+      <div class="result-line" id="chSentence"></div>
+    </div>
+    <div class="q">
+      <label class="qlabel" for="chWhy">d) Per què és un bon canvi?</label>
+      <span class="starter">Completa: «És un bon canvi perquè …»</span>
+      <textarea id="chWhy"></textarea>
+    </div>
+    <div class="q">
+      <span class="qlabel">e) Prova el canvi</span>
+      <p class="note">El botó treu els euros de la despesa i els posa a l'estalvi.</p>
+      <div class="actions">
+        <button type="button" class="primary" id="apply">Prova el canvi</button>
+        <button type="button" id="undo" hidden>Desfés el canvi</button>
+      </div>
+      <p class="msg" id="applyMsg" role="status"></p>
+      <div class="cmp-wrap" id="cmpWrap" hidden><table class="cmp" id="cmp"></table></div>
+    </div>
+    <div class="q" id="q3wrap" hidden>
+      <span class="qlabel">f) Ara es compleix la regla?</span>
+      <div class="choices" id="q3"></div>
+      <label class="qlabel" for="q3t">Explica què ha canviat.</label>
+      <span class="starter">Completa: «Abans l'estalvi era el … %. Ara és el … %.»</span>
+      <textarea id="q3t"></textarea>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="actions">
+      <button type="button" class="primary" id="pdfBtn"><svg class="icon"><use href="#i-down"/></svg>Descarrega el treball en PDF</button>
+    </div>
+    <p class="note" id="pdfNote">El PDF guarda les dades, el resultat i les respostes.</p>
+  </section>
+</div>
+
+<script>
+const ico=id=>`<svg class="icon" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const G={
+  inc:{name:"Diners que entren",what:"Sou, paga, regals…",icon:"wallet",color:"var(--inc)",hex:"#4b5694"},
+  nec:{name:"Necessitats",what:"Coses que necessites per viure: casa, menjar, llum, transport, assegurances…",icon:"home",color:"var(--nec)",hex:"#1f5fa8"},
+  des:{name:"Desitjos",what:"Coses que t'agraden però pots viure sense: oci, roba de capritx, sèries…",icon:"star",color:"var(--des)",hex:"#d97a14"},
+  est:{name:"Estalvi",what:"Diners que guardes.",icon:"jar",color:"var(--est)",hex:"#2e9461"}
+};
+const OUT=["nec","des","est"];
+const RULE={nec:{max:50,txt:"Com a màxim 50 %"},des:{max:30,txt:"Com a màxim 30 %"},est:{min:20,txt:"Com a mínim 20 %"}};
+const EXAMPLE={inc:[["Sou",1200],["Classes particulars",100]],nec:[["Lloguer de l'habitació",450],["Mòbil i internet",35],["Assegurança",20],["Supermercat",200],["Llum i aigua",50],["Transport",40]],
+  des:[["Restaurants",160],["Roba",70],["Sèries i gimnàs",45]],est:[["Compte d'estalvi",150]]};
+const KEY="pressupost-nese-v1";
+const $=id=>document.getElementById(id);
+const eur=n=>n.toLocaleString("ca-ES",{minimumFractionDigits:0,maximumFractionDigits:2,useGrouping:true})+" €";
+const pc=n=>n.toLocaleString("ca-ES",{maximumFractionDigits:1})+" %";
+const num=v=>{const n=parseFloat(String(v).replace(",","."));return isFinite(n)&&n>0?n:0};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let S;
+function fresh(src,ex){return {ex:!!ex,items:{inc:[],nec:[],des:[],est:[],...Object.fromEntries(Object.entries(src).map(([k,a])=>[k,a.map(([n,v])=>({n,v}))]))},
+  before:null,change:null,a:{q1:[],q1t:"",item:"",how:"",amount:"",why:"",q3:"",q3t:""}}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify({S,alumne:$("alumne").value,persona:$("persona").value}))}catch(e){}}
+function restore(){try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d&&d.S&&d.S.items){S=d.S;$("alumne").value=d.alumne||"";$("persona").value=d.persona||"";return true}}catch(e){}return false}
+
+function listBox(k){
+  const g=G[k];const el=document.createElement("div");el.className="box";el.style.setProperty("--gc",g.color);
+  el.innerHTML=`<h3>${ico(g.icon)}${g.name}</h3><p class="what">${g.what}</p>`;
+  S.items[k].forEach((it,i)=>{
+    const r=document.createElement("div");r.className="row";
+    r.innerHTML=`<input class="name" placeholder="Què és?" aria-label="${g.name}: nom ${i+1}" autocomplete="off">
+      <div class="money"><input type="number" min="0" step="1" inputmode="decimal" aria-label="${g.name}: euros ${i+1}"><span>€</span></div>
+      <button type="button" class="del" aria-label="Esborra" title="Esborra">${ico("x")}</button>`;
+    const [ni,vi]=r.querySelectorAll("input");ni.value=it.n;vi.value=it.v||"";
+    if(it.tag){ni.readOnly=true;vi.readOnly=true}
+    ni.addEventListener("input",e=>{it.n=e.target.value;fillItemSelect();persist()});
+    vi.addEventListener("input",e=>{it.v=num(e.target.value);update()});
+    r.querySelector(".del").addEventListener("click",()=>{if(it.tag)return undo();S.items[k].splice(i,1);render()});
+    if(it.tag)r.querySelector(".del").title="Desfés el canvi";
+    el.appendChild(r);
+  });
+  const add=document.createElement("button");add.type="button";add.className="add";add.innerHTML=ico("plus")+"Afegeix-ne un";
+  add.onclick=()=>{S.items[k].push({n:"",v:0});render()};
+  el.appendChild(add);
+  const tot=document.createElement("div");tot.className="total";tot.innerHTML=`<span>Total</span><span id="tot-${k}"></span>`;el.appendChild(tot);
+  return el;
+}
+function render(){
+  $("incBox").innerHTML="";$("incBox").appendChild(listBox("inc"));
+  $("outBox").innerHTML="";OUT.forEach(k=>$("outBox").appendChild(listBox(k)));
+  $("exNote").hidden=!S.ex;
+  renderQuestions();update();
+}
+function choiceSet(id,name,opts,type,sel,onch){
+  const box=$(id);box.innerHTML="";
+  opts.forEach(([v,l])=>{const lab=document.createElement("label");lab.className="choice";
+    lab.innerHTML=`<input type="${type}" name="${name}" value="${v}">${l}`;const inp=lab.querySelector("input");
+    inp.checked=Array.isArray(sel)?sel.includes(v):sel===v;inp.addEventListener("change",onch);box.appendChild(lab)});
+}
+function renderQuestions(){
+  choiceSet("q1","q1",[["nec","Necessitats"],["des","Desitjos"],["est","Estalvi"],["cap","Cap: es compleix"]],"checkbox",S.a.q1,()=>{S.a.q1=[...document.querySelectorAll('input[name=q1]:checked')].map(i=>i.value);persist()});
+  choiceSet("chHow","how",[["treure","La trec"],["barata","La canvio per una de més barata"]],"radio",S.a.how,e=>{S.a.how=e.target.value;sentence();persist()});
+  choiceSet("q3","q3",[["si","Sí"],["no","No"]],"radio",S.a.q3,e=>{S.a.q3=e.target.value;persist()});
+  $("q1t").value=S.a.q1t;$("chWhy").value=S.a.why;$("q3t").value=S.a.q3t;$("chAmount").value=S.a.amount;
+  fillItemSelect();
+}
+function fillItemSelect(){
+  const sel=$("chItem");const cur=S.a.item;
+  let h=`<option value="">Tria una despesa…</option>`;
+  ["nec","des"].forEach(k=>{h+=`<optgroup label="${G[k].name}">`;S.items[k].forEach((it,i)=>{if(it.n.trim()||num(it.v))h+=`<option value="${k}-${i}">${esc(it.n||"(sense nom)")} (${eur(num(it.v))})</option>`});h+=`</optgroup>`});
+  sel.innerHTML=h;sel.value=cur;if(sel.value!==cur){S.a.item="";sel.value=""}
+  sel.disabled=!!S.change;$("chAmount").disabled=!!S.change;
+  sentence();
+}
+function itemOf(key){if(!key)return null;const [k,i]=key.split("-");return S.items[k]&&S.items[k][+i]?{k,i:+i,it:S.items[k][+i]}:null}
+function sentence(){
+  const o=itemOf(S.a.item),a=num(S.a.amount);
+  $("chSentence").textContent=o&&a?`${S.a.how==="barata"?"Canvio":"Trec"} «${o.it.n||"la despesa"}». Surten ${eur(a)} de ${G[o.k].name.toLowerCase()} i van a l'estalvi.`:"Aquí apareixerà el teu canvi quan responguis a, b i c.";
+}
+function compute(){
+  const t={};for(const k of ["inc",...OUT])t[k]=S.items[k].reduce((s,x)=>s+num(x.v),0);
+  const out=t.nec+t.des+t.est,P=x=>t.inc>0?x/t.inc*100:0;
+  return {t,out,saldo:t.inc-out,p:{nec:P(t.nec),des:P(t.des),est:P(t.est)},P};
+}
+const okOf=(k,p)=>RULE[k].max!=null?p<=RULE[k].max:p>=RULE[k].min;
+const labOf=(k,p)=>okOf(k,p)?"Bé":RULE[k].max!=null?"Massa alt":"Massa baix";
+function seg(p,color,label,dark){const s=document.createElement("div");s.className="seg"+(dark?" dark":"");s.style.flexBasis=p+"%";s.style.width=p+"%";s.style.background=color;s.textContent=p>=10?label:"";s.title=label;return s}
+function update(){
+  const c=compute();
+  for(const k of ["inc",...OUT]){const e=$("tot-"+k);if(e)e.textContent=eur(c.t[k])}
+  $("cards").innerHTML="";
+  OUT.forEach(k=>{const g=G[k],p=c.p[k],ok=okOf(k,p);const d=document.createElement("div");d.className="card";d.style.setProperty("--gc",g.color);
+    d.innerHTML=`<span class="t">${ico(g.icon)}${g.name}</span><span class="pct">${c.t.inc>0?pc(p):"–"}</span><span class="rule">${RULE[k].txt}</span>`+
+      (c.t.inc>0?`<span class="pill ${ok?"ok":"bad"}">${ico(ok?"ok":"bad")}${labOf(k,p)}</span>`:"");
+    $("cards").appendChild(d)});
+  const sr=$("stackReal");sr.innerHTML="";
+  if(c.t.inc>0){const sc=c.out>c.t.inc?c.t.inc/c.out:1;
+    sr.append(seg(c.p.nec*sc,"var(--nec)",pc(c.p.nec)),seg(c.p.des*sc,"var(--des)",pc(c.p.des),true),seg(c.p.est*sc,"var(--est)",pc(c.p.est)));
+    if(c.saldo>0)sr.append(seg(c.P(c.saldo),"var(--none)",pc(c.P(c.saldo)),true))}
+  const si=$("stackIdeal");si.innerHTML="";si.append(seg(50,"var(--nec)","50 %"),seg(30,"var(--des)","30 %",true),seg(20,"var(--est)","20 %"));
+  const b=$("balance");
+  if(c.t.inc<=0){b.className="balance mid";b.innerHTML=ico("info")+"<span>Escriu els diners que entren al pas 2.</span>"}
+  else if(c.saldo<-0.005){b.className="balance bad";b.innerHTML=ico("bad")+`<span>Entren ${eur(c.t.inc)} i surten ${eur(c.out)}. Falten ${eur(-c.saldo)}.</span>`}
+  else if(c.saldo>0.005){b.className="balance mid";b.innerHTML=ico("info")+`<span>Entren ${eur(c.t.inc)} i surten ${eur(c.out)}. Sobren ${eur(c.saldo)}.</span>`}
+  else{b.className="balance ok";b.innerHTML=ico("ok")+`<span>Entren ${eur(c.t.inc)} i surten ${eur(c.out)}. Està tot repartit.</span>`}
+  renderCmp(c);persist();
+}
+function snap(c){return {p:{...c.p},t:{...c.t}}}
+function renderCmp(c){
+  const has=!!S.before;$("cmpWrap").hidden=!has;$("q3wrap").hidden=!has;$("undo").hidden=!has;$("apply").disabled=has;
+  if(!has)return;
+  const b=S.before;
+  $("cmp").innerHTML=`<thead><tr><th>Part</th><th>Abans</th><th>Ara</th></tr></thead><tbody>`+OUT.map(k=>{
+    const pb=b.p[k],pa=c.p[k];const cell=p=>`${pc(p)} <span class="pill ${okOf(k,p)?"ok":"bad"}">${ico(okOf(k,p)?"ok":"bad")}${labOf(k,p)}</span>`;
+    return `<tr><td><b>${G[k].name}</b></td><td>${cell(pb)}</td><td>${cell(pa)}</td></tr>`}).join("")+`</tbody>`;
+}
+function apply(){
+  const m=$("applyMsg");const o=itemOf(S.a.item),a=num(S.a.amount);
+  if(!o){m.className="msg bad";m.textContent="Primer tria una despesa a la pregunta a.";return}
+  if(!S.a.how){m.className="msg bad";m.textContent="Primer respon la pregunta b.";return}
+  if(!a){m.className="msg bad";m.textContent="Primer escriu quants euros estalvies a la pregunta c.";return}
+  if(a>num(o.it.v)){m.className="msg bad";m.textContent=`No pots estalviar més de ${eur(num(o.it.v))}, que és el que costa aquesta despesa.`;return}
+  S.before=snap(compute());
+  S.change={k:o.k,i:o.i,prev:num(o.it.v),amount:a};
+  o.it.v=num(o.it.v)-a;
+  S.items.est.push({n:"Estalvi del canvi",v:a,tag:true});
+  m.className="msg ok";m.textContent="Fet! Mira la taula i el resultat del pas 4.";
+  render();
+}
+function undo(){
+  if(!S.change)return;const {k,i,prev}=S.change;
+  if(S.items[k][i])S.items[k][i].v=prev;
+  S.items.est=S.items.est.filter(x=>!x.tag);S.change=null;S.before=null;
+  $("applyMsg").className="msg";$("applyMsg").textContent="Has desfet el canvi.";
+  render();
+}
+
+/* PDF */
+function buildPdf(J,d){
+  const doc=new J({unit:"mm",format:"a4"});const M=16,W=178;let y=18;
+  const ink=[23,32,43],mut=[79,90,104];
+  const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+  const clean=s=>String(s).replace(/[−–—]/g,"-").replace(/[«»“”]/g,'"').replace(/[’‘]/g,"'").replace(/…/g,"...").replace(/→/g,"->");
+  const txt=(s,x,yy,o)=>doc.text(Array.isArray(s)?s.map(clean):clean(s),x,yy,o);
+  const need=h=>{if(y+h>282){doc.addPage();y=18}};
+  const h2=s=>{need(14);y+=4;doc.setFont("helvetica","bold");doc.setFontSize(13);doc.setTextColor(...ink);txt(s,M,y);y+=7};
+  const para=(s,bold)=>{doc.setFont("helvetica",bold?"bold":"normal");doc.setFontSize(11);doc.setTextColor(...ink);doc.splitTextToSize(clean(s),W).forEach(l=>{need(6);txt(l,M,y);y+=5.6})};
+  doc.setFont("helvetica","bold");doc.setFontSize(18);doc.setTextColor(...ink);txt("Pressupost 50/30/20"+(d.persona?": "+d.persona:""),M,y);y+=7;
+  doc.setFont("helvetica","normal");doc.setFontSize(11);doc.setTextColor(...mut);txt(`Alumne/a: ${d.alumne||"-"}     Data: ${d.date}`,M,y);y+=4;
+  h2("1. Les dades");
+  ["inc",...OUT].forEach(k=>{const g=G[k];const items=S.items[k].filter(i=>i.n.trim()||num(i.v));need(8+items.length*5.5);
+    doc.setFillColor(...hex(g.hex));doc.rect(M,y-3.2,3.5,3.5,"F");doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(...ink);
+    txt(g.name,M+6,y);txt(eur(d.c.t[k]),M+W,y,{align:"right"});y+=5.6;doc.setFont("helvetica","normal");doc.setTextColor(...mut);
+    if(!items.length){txt("(cap)",M+6,y);y+=5.6}
+    items.forEach(i=>{txt(i.n||"(sense nom)",M+6,y);txt(eur(num(i.v)),M+W,y,{align:"right"});y+=5.6});y+=1.5});
+  h2("2. El resultat");
+  OUT.forEach(k=>{const p=d.c.p[k],ok=okOf(k,p);need(7);doc.setFont("helvetica","normal");doc.setFontSize(11);doc.setTextColor(...ink);
+    txt(`${G[k].name}: ${pc(p)}  (${RULE[k].txt.toLowerCase()})`,M,y);doc.setFont("helvetica","bold");doc.setTextColor(...(ok?[37,128,79]:[184,53,43]));txt(labOf(k,p),M+W,y,{align:"right"});y+=6.2});
+  para($("balance").textContent);
+  h2("3. Quin és el problema?");
+  const map={nec:"Necessitats",des:"Desitjos",est:"Estalvi",cap:"Cap: es compleix"};
+  para("Parts que no compleixen la regla: "+(d.a.q1.length?d.a.q1.map(x=>map[x]).join(", "):"(sense resposta)"));
+  para("Explicació: "+(d.a.q1t.trim()||"(sense resposta)"));
+  h2("4. El meu canvi");
+  para(d.sentence);para("Per què és un bon canvi: "+(d.a.why.trim()||"(sense resposta)"));
+  if(d.before){
+    need(8);y+=2;doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(...ink);txt("Part",M,y);txt("Abans",M+70,y);txt("Ara",M+125,y);y+=6;
+    OUT.forEach(k=>{need(6);doc.setFont("helvetica","normal");txt(G[k].name,M,y);txt(`${pc(d.before.p[k])} (${labOf(k,d.before.p[k])})`,M+70,y);txt(`${pc(d.c.p[k])} (${labOf(k,d.c.p[k])})`,M+125,y);y+=6});
+    para("Ara es compleix la regla? "+({si:"Sí",no:"No"}[d.a.q3]||"(sense resposta)"));
+    para("Què ha canviat: "+(d.a.q3t.trim()||"(sense resposta)"));
+  } else para("No ha provat el canvi.");
+  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(...mut);txt(`Pressupost 50/30/20 pas a pas · pàgina ${i} de ${n}`,M,290)}
+  return doc;
+}
+async function downloadPdf(){
+  const note=$("pdfNote"),btn=$("pdfBtn");
+  if(!window.jspdf){note.textContent="No s'ha pogut preparar el PDF. Torna a obrir la pàgina.";return}
+  btn.disabled=true;
+  try{
+    const d={alumne:$("alumne").value.trim(),persona:$("persona").value.trim(),date:new Date().toLocaleDateString("ca-ES"),c:compute(),a:S.a,before:S.before,sentence:$("chSentence").textContent};
+    const doc=buildPdf(window.jspdf.jsPDF,d);
+    const slug=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase();
+    const filename=["pressupost",slug(d.persona),slug(d.alumne)].filter(Boolean).join("-")+".pdf";
+    const blob=doc.output("blob");
+    // Dins de claude.ai: descàrrega de la plataforma. A qualsevol altre lloc: descàrrega normal del navegador.
+    let dl=null;
+    try{if(window.claude&&window.claude.use)dl=await window.claude.use("downloads")}catch(_){dl=null}
+    if(dl){await dl.save({filename,data:blob})}
+    else{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download=filename;a.style.display="none";
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),10000);
+    }
+    note.textContent="PDF desat. Mira a la carpeta de descàrregues.";
+  }catch(e){note.textContent=e&&e.code==="declined"?"Has cancel·lat la descàrrega.":"No s'ha pogut descarregar el PDF. Torna-ho a provar."}
+  finally{btn.disabled=false}
+}
+
+$("q1t").addEventListener("input",e=>{S.a.q1t=e.target.value;persist()});
+$("chWhy").addEventListener("input",e=>{S.a.why=e.target.value;persist()});
+$("q3t").addEventListener("input",e=>{S.a.q3t=e.target.value;persist()});
+$("chItem").addEventListener("change",e=>{S.a.item=e.target.value;sentence();persist()});
+$("chAmount").addEventListener("input",e=>{S.a.amount=e.target.value;sentence();persist()});
+$("apply").onclick=apply;$("undo").onclick=undo;$("pdfBtn").onclick=downloadPdf;
+["alumne","persona"].forEach(id=>$(id).addEventListener("input",persist));
+$("p-ex").onclick=()=>{S=fresh(EXAMPLE,true);render()};
+$("p-zero").onclick=()=>{S=fresh({inc:[["",0]],nec:[["",0]],des:[["",0]],est:[["",0]]});$("alumne").value="";$("persona").value="";render()};
+if(!restore())S=fresh(EXAMPLE,true);
+render();
+</script>
+
+</body></html>
